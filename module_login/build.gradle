@@ -1,0 +1,78 @@
+plugins {
+    id 'org.jetbrains.kotlin.android'
+    id 'com.google.dagger.hilt.android'
+}
+// 根据 isModuleMode 动态切换 集成模式 / 组件模式
+if (isModuleMode) {
+    // 集成模式
+    apply plugin: 'com.android.library'
+} else {
+    // 组件模式
+    apply plugin: 'com.android.application'
+}
+apply plugin: 'kotlin-kapt'
+def app_android = rootProject.ext.app_android
+android {
+    namespace 'com.zm.module_login'
+    compileSdk app_android.compileSdkVersion
+
+    defaultConfig {
+        if (!isModuleMode) {
+            // 组件模式 : 必须配置 applicationId
+            applicationId "com.zm.module_login"
+
+        }
+        minSdk app_android.minSdkVersion
+        targetSdk app_android.targetSdkVersion
+        versionCode app_android.versionCode
+        versionName app_android.versionName
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+
+        // 资源配置
+        sourceSets {
+            main {
+                if (!isModuleMode) {
+                    // 组件化模式下使用 ComponentAndroidManifest.xml 作为清单文件
+                    manifest.srcFile 'src/main/component/AndroidManifest.xml'
+                } else {
+                    // 集成模式 下使用默认设置
+                }
+            }
+        }
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [AROUTER_MODULE_NAME: project.getName()]
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    viewBinding {
+        enabled = true
+    }
+}
+def dep = rootProject.ext.app_impl
+dependencies {
+    implementation project(path: ':module_base')
+    testImplementation dep.junit
+    androidTestImplementation dep.extjunit
+    androidTestImplementation dep.espresso
+//每个模块都要加
+    kapt dep.aroutercompiler
+    kapt dep.hiltcompiler
+    implementation dep.hilt
+}

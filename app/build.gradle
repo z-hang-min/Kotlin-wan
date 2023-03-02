@@ -1,0 +1,65 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'com.google.dagger.hilt.android'
+}
+apply plugin: 'kotlin-kapt'
+def app_android = rootProject.ext.app_android
+android {
+    namespace 'com.zm.kotlintest'
+    compileSdk app_android.compileSdkVersion
+
+    defaultConfig {
+        applicationId app_android.applicationId
+        minSdk app_android.minSdkVersion
+        targetSdk app_android.targetSdkVersion
+        versionCode app_android.versionCode
+        versionName app_android.versionName
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [AROUTER_MODULE_NAME: project.getName()]
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    viewBinding {
+        enabled = true
+    }
+    ndkVersion '23.0.7421159 rc5'
+    buildFeatures {
+        viewBinding true
+    }
+}
+def dep = rootProject.ext.app_impl
+dependencies {
+    implementation project(path: ':module_base')
+    testImplementation dep.junit
+    androidTestImplementation dep.extjunit
+    androidTestImplementation dep.espresso
+
+    //这里判断是集成模式还是单模块调试模式
+    if (isModuleMode) {
+        implementation project(path: ':module_login')
+    }
+    kapt dep.aroutercompiler
+    api dep.hilt
+    kapt dep.hiltcompiler
+
+}
+kapt {
+    correctErrorTypes true
+}
